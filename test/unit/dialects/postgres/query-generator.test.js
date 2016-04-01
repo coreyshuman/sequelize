@@ -514,6 +514,16 @@ if (dialect.match(/^postgres/)) {
           arguments: ['myTable', {where: {field: {ne: null}}}],
           expectation: 'SELECT * FROM myTable WHERE myTable.field IS NOT NULL;',
           context: {options: {quoteIdentifiers: false}}
+        }, {
+          title: 'use IS NOT if not === BOOLEAN',
+          arguments: ['myTable', {where: {field: {not: true}}}],
+          expectation: 'SELECT * FROM myTable WHERE myTable.field IS NOT true;',
+          context: {options: {quoteIdentifiers: false}}
+        }, {
+          title: 'use != if not !== BOOLEAN',
+          arguments: ['myTable', {where: {field: {not: 3}}}],
+          expectation: 'SELECT * FROM myTable WHERE myTable.field != 3;',
+          context: {options: {quoteIdentifiers: false}}
         }
       ],
 
@@ -851,6 +861,42 @@ if (dialect.match(/^postgres/)) {
           arguments: ['User', 'mySchema.user_foo_bar'],
           expectation: 'DROP INDEX IF EXISTS mySchema.user_foo_bar',
           context: {options: {quoteIdentifiers: false}}
+        }
+      ],
+
+      startTransactionQuery: [
+        {
+          arguments: [{}],
+          expectation: 'START TRANSACTION;',
+          context: {options: {quoteIdentifiers: false}}
+        },
+        {
+          arguments: [{parent: 'MockTransaction', name: 'transaction-uid'}],
+          expectation: 'SAVEPOINT \"transaction-uid\";',
+          context: {options: {quoteIdentifiers: false}}
+        },
+        {
+          arguments: [{parent: 'MockTransaction', name: 'transaction-uid'}],
+          expectation: 'SAVEPOINT \"transaction-uid\";',
+          context: {options: {quoteIdentifiers: true}}
+        }
+      ],
+
+      rollbackTransactionQuery: [
+        {
+          arguments: [{}],
+          expectation: 'ROLLBACK;',
+          context: {options: {quoteIdentifiers: false}}
+        },
+        {
+          arguments: [{parent: 'MockTransaction', name: 'transaction-uid'}],
+          expectation: 'ROLLBACK TO SAVEPOINT \"transaction-uid\";',
+          context: {options: {quoteIdentifiers: false}}
+        },
+        {
+          arguments: [{parent: 'MockTransaction', name: 'transaction-uid'}],
+          expectation: 'ROLLBACK TO SAVEPOINT \"transaction-uid\";',
+          context: {options: {quoteIdentifiers: true}}
         }
       ]
     };
